@@ -17,8 +17,8 @@ class CompmakeTestBase:
     """Base class for pytest-based compmake tests."""
     
     @pytest.fixture(autouse=True)
-    def setup_method(self):
-        """Setup method that runs before each test method."""
+    def setup_teardown(self):
+        """Setup and teardown for each test."""
         self.root0 = mkdtemp()
         self.root = os.path.join(self.root0, 'compmake')
         self.db = StorageFilesystem(self.root, compress=True)

@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 import pytest
-from ..structures import Cache
-from ..jobs import get_job_cache
-from .pytest_base import CompmakeTestBase
+import sys
+import os
+
+# Add the src directory to path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
+
+# Use absolute imports instead of relative
+from compmake.structures import Cache
+from compmake.jobs import get_job_cache
+from compmake.unittests.pytest_base import CompmakeTestBase
 
 def job_success(*args, **kwargs):
     pass
@@ -34,3 +41,7 @@ class TestBlocked(CompmakeTestBase):
         self.assertMakeFailed(run, nfailed=1, nblocked=1)
 
         check_job_states(self.db, A=Cache.DONE, B=Cache.FAILED, C=Cache.BLOCKED)
+
+if __name__ == "__main__":
+    # Run this test file directly
+    pytest.main(["-xvs", __file__])
