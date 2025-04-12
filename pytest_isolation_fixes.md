@@ -18,6 +18,7 @@ These failures were primarily due to:
 - File system operations without proper cleanup
 - Use of global configuration settings
 - Shared database paths between tests
+- Lambda function pickling errors
 
 ## Improved Base Test Class
 
@@ -112,6 +113,25 @@ test_dir2 = os.path.join(str(tmp_path), "test_dynamic6_2")
 os.makedirs(test_dir2, exist_ok=True)
 self.db = StorageFilesystem(test_dir2, compress=True)
 self.cc = Context(db=self.db)
+```
+
+### 5. Avoiding Lambda Functions in Dynamic Contexts
+
+**Before**:
+```python
+# This causes pickling errors
+context.comp_dynamic(lambda ctx: fd(ctx, do_fail))
+```
+
+**After**:
+```python
+# Use a named function instead
+def fd_wrapper(context):
+    test_class = TestDynamicFailure.current_test
+    # The rest of the function...
+
+# Call the named function
+context.comp_dynamic(fd_wrapper)
 ```
 
 ## Implementing the Fixes
