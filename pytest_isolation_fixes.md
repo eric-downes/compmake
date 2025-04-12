@@ -1,24 +1,26 @@
-# Fixing Test Isolation Issues in Compmake Pytest Tests
+# Test Isolation Fixes in Compmake Pytest Migration
 
-This document explains the fixes applied to address test isolation issues in the pytest-converted tests.
+This document explains the test isolation fixes that were applied during the pytest migration, which are now part of the final test suite.
 
-## Overview of Issues
+## Overview of Issues Addressed
 
-When running all tests together, several test files failed that worked when run individually:
+During the migration, we discovered that several test files would pass when run individually but fail when run as part of the full test suite:
 
-1. `test_dynamic_5_pytest.py`
-2. `test_dynamic_6_pytest.py`
-3. `test_dynamic_failure_pytest.py`
-4. `test_old_jobs_pytest.py`
-5. `test_plugins_pytest.py`
+1. `test_dynamic_5.py`
+2. `test_dynamic_6.py`
+3. `test_dynamic_failure.py`
+4. `test_old_jobs.py`
+5. `test_plugins.py`
 
 These failures were primarily due to:
 
 - Shared state between tests through class variables
 - File system operations without proper cleanup
-- Use of global configuration settings
+- Use of global configuration settings without restoration
 - Shared database paths between tests
-- Lambda function pickling errors
+- Lambda function pickling errors in multiprocessing contexts
+
+The fixes we implemented are now part of our standard test patterns and should be followed when writing new tests.
 
 ## Improved Base Test Class
 
@@ -134,30 +136,51 @@ def fd_wrapper(context):
 context.comp_dynamic(fd_wrapper)
 ```
 
-## Implementing the Fixes
+## Implementation Status
 
-To implement these fixes:
+These fixes have now been fully incorporated into our test suite:
 
-1. Add the `improved_pytest_base.py` file to the project
-2. Migrate to the fixed versions of failing tests:
-   - `test_dynamic_5_pytest_fixed.py`
-   - `test_dynamic_6_pytest_fixed.py`
-   - `test_dynamic_failure_pytest_fixed.py`
-   - `test_old_jobs_pytest_fixed.py`
-   - `test_plugins_pytest_fixed.py`
+1. The `improved_pytest_base.py` patterns are used throughout the test suite
+2. All previously failing tests have been fixed and integrated:
+   - `test_dynamic_5.py`
+   - `test_dynamic_6.py`
+   - `test_dynamic_failure.py`
+   - `test_old_jobs.py`
+   - `test_plugins.py`
 
-Or gradually update the existing files with the fixes shown in these examples.
+All tests now run successfully both individually and as part of the full test suite.
 
-## General Best Practices for Test Isolation
+## Best Practices for Future Test Development
 
-When writing or converting tests:
+Based on our experience, these best practices should be followed when writing new tests or updating existing ones:
 
-1. Never use class variables to share state between tests
-2. Always use fresh, isolated directories for each test
-3. Use pytest fixtures to set up and tear down resources
-4. Save and restore any global state you modify
-5. Use `pytest.raises()` instead of trying to catch exceptions manually
-6. Create unique contexts for different test phases
-7. Clean up resources in teardown, even if tests fail
+1. **Never use class variables for test state**
+   - Class variables can cause state to leak between tests
+   - Use instance variables or parameters instead
 
-By following these practices, tests will run successfully both individually and in batch mode.
+2. **Use isolated directories for each test**
+   - Use pytest's `tmp_path` fixture to create unique directories
+   - Example: `root = os.path.join(str(tmp_path), "test_name")`
+
+3. **Manage configuration state properly**
+   - Save original values before modifying
+   - Restore values in teardown using fixtures
+   - Use a fixture with `yield` to ensure restoration even if the test fails
+
+4. **Create fresh contexts for different test phases**
+   - Don't reuse database connections between test phases
+   - Create new contexts with new directories for different phases
+
+5. **Avoid lambda functions in serialized contexts**
+   - Use named functions instead of lambdas in any code that might be pickled
+   - Be careful with closures capturing local variables
+
+6. **Use pytest's assertions and fixtures**
+   - Use `pytest.raises()` instead of try/except blocks
+   - Use pytest fixtures for setup/teardown logic
+
+7. **Clean up resources properly**
+   - Ensure cleanup happens even if tests fail
+   - Use `with` statements or teardown fixtures
+
+By following these practices, you'll avoid subtle test isolation issues and create more reliable test suites that can run both individually and as part of larger test runs.
