@@ -320,12 +320,13 @@ This table tracks the status of each test file's migration from nose to pytest:
 | test_assertions.py | ✅ Done | test_assertions_pytest.py | ✅ Passing | Modified to use `make` instead of `parmake` to avoid Python 3.12 multiprocessing issues |
 | test_blocked.py | ✅ Done | test_blocked_pytest.py | ✅ Passing | Fixed `time.clock()` issue with compatibility layer |
 | test_dynamic_1.py | ✅ Done | test_dynamic_1_pytest.py | ✅ Passing | A more complex test with dynamic job generation |
-| test_delegation.py | 🔄 Not Started | - | - | - |
-| test_delegation_2.py | 🔄 Not Started | - | - | - |
+| test_delegation.py | ✅ Done | test_delegation_pytest.py | ✅ Passing | Test with job delegation |
+| test_more.py | ✅ Done | test_more_pytest.py | ✅ Passing | Multiple tests for dependencies and job ID handling, converted assertions to pytest style |
+| test_delegation_2.py | ✅ Done | test_delegation_2_pytest.py | ✅ Passing | Test with recursive job delegation |
+| test_dynamic_2.py | ✅ Done | test_dynamic_2_pytest.py | ✅ Passing | Test with recursive mockup |
 | test_delegation_3.py | 🔄 Not Started | - | - | - |
 | test_delegation_4.py | 🔄 Not Started | - | - | - |
 | test_delegation_5.py | 🔄 Not Started | - | - | - |
-| test_dynamic_2.py | 🔄 Not Started | - | - | - |
 | test_dynamic_2rec.py | 🔄 Not Started | - | - | - |
 | test_dynamic_2rec_par.py | 🔄 Not Started | - | - | - |
 | test_dynamic_3.py | 🔄 Not Started | - | - | - |
