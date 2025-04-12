@@ -307,7 +307,7 @@ This table tracks the status of each test file's migration from nose to pytest:
 | Test File | Converted | Pytest File | Working | Notes |
 |-----------|-----------|-------------|---------|-------|
 | test_assertions.py | 🔄 Not Started | - | - | - |
-| test_blocked.py | ✅ Done | test_blocked_pytest.py | ⚠️ Untested | Example conversion |
+| test_blocked.py | ✅ Done | test_blocked_pytest.py | ✅ Passing | Fixed `time.clock()` issue with compatibility layer |
 | test_delegation.py | 🔄 Not Started | - | - | - |
 | test_delegation_2.py | 🔄 Not Started | - | - | - |
 | test_delegation_3.py | 🔄 Not Started | - | - | - |
@@ -370,4 +370,5 @@ This section will be updated as we encounter issues during the migration.
 
 | Issue | Solution |
 |-------|----------|
-| | |
+| `AttributeError: module 'time' has no attribute 'clock'` | `time.clock()` was removed in Python 3.8. Fixed by creating a compatibility layer in `utils/compat.py` with a `get_cpu_time()` function that uses `time.perf_counter()` in Python 3 and falls back to `time.clock()` in Python 2. Updated all calls in `structures.py` and `time_track.py`. |
+| nose imports causing test failures | Create a clean `__init__.py` without nose imports for pytest. Need to ensure the test modules can be imported individually without triggering nose imports. |
