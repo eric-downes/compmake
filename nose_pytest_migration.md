@@ -371,4 +371,4 @@ This section will be updated as we encounter issues during the migration.
 | Issue | Solution |
 |-------|----------|
 | `AttributeError: module 'time' has no attribute 'clock'` | `time.clock()` was removed in Python 3.8. Fixed by creating a compatibility layer in `utils/compat.py` with a `get_cpu_time()` function that uses `time.perf_counter()` in Python 3 and falls back to `time.clock()` in Python 2. Updated all calls in `structures.py` and `time_track.py`. |
-| nose imports causing test failures | Create a clean `__init__.py` without nose imports for pytest. Need to ensure the test modules can be imported individually without triggering nose imports. |
+| nose imports causing test failures | Created a clean `__init__.py.pytest` without nose imports that can be swapped in for pytest. Added a `run_pytest_test.py` script to run tests in a controlled environment with the clean __init__. |
