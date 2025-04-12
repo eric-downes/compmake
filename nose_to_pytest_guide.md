@@ -227,6 +227,15 @@ else:
   - For test purposes, you may need to temporarily switch from parallel to sequential execution
   - For permanent fixes, review the Python 3.12 multiprocessing module changes and update code accordingly
   - Watch for KeyError exceptions in resource tracking or memory-shared dictionaries
+  - When encountering errors with `parmake`, switching to sequential `make` is often a workable solution
+
+#### Dependencies on Nose in Helper Modules
+
+- **Issue**: Some test helper modules may import from nose, causing pytest tests to fail with import errors
+- **Solution**:
+  - Create pytest versions of helper modules (e.g., for decorators like `@expected_failure`)
+  - Replace nose-specific helpers with pytest equivalents (`@pytest.mark.xfail` instead of `@expected_failure`)
+  - Use conditional imports in helper modules to work with both frameworks during migration
 
 ### 3.2 Running Tests Standalone
 
@@ -237,6 +246,67 @@ if __name__ == "__main__":
     # Run this specific test file directly
     pytest.main(["-xvs", __file__])
 ```
+
+### 3.3 Using Test Runners During Migration
+
+For large codebases, it's helpful to create a dedicated test runner script like `run_pytest_test.py` to facilitate migration:
+
+```python
+#!/usr/bin/env python
+import os
+import sys
+import pytest
+import shutil
+import atexit
+
+# Directory paths
+root_dir = os.path.dirname(os.path.abspath(__file__))
+test_dir = os.path.join(root_dir, 'path/to/tests')
+
+# File paths for __init__.py swapping
+init_path = os.path.join(test_dir, '__init__.py')
+init_pytest_path = os.path.join(test_dir, '__init__.py.pytest')
+init_backup_path = os.path.join(test_dir, '__init__.py.backup')
+
+def swap_init_files():
+    """Swap the __init__.py file to use the pytest-friendly version."""
+    # Backup current __init__.py
+    if os.path.exists(init_path):
+        shutil.copy2(init_path, init_backup_path)
+    
+    # Install pytest version
+    if os.path.exists(init_pytest_path):
+        shutil.copy2(init_pytest_path, init_path)
+
+def restore_init_files():
+    """Restore the original __init__.py file."""
+    if os.path.exists(init_backup_path):
+        shutil.copy2(init_backup_path, init_path)
+        os.remove(init_backup_path)
+
+# Register cleanup function
+atexit.register(restore_init_files)
+
+if __name__ == "__main__":
+    test_path = sys.argv[1] if len(sys.argv) > 1 else 'path/to/tests'
+    
+    # Swap files before running tests
+    swap_init_files()
+    
+    try:
+        # Run the test
+        result = pytest.main(["-v", test_path])
+        sys.exit(result)
+    finally:
+        # restore_init_files will be called by atexit
+        pass
+```
+
+This approach:
+1. Temporarily swaps in a pytest-compatible `__init__.py` 
+2. Runs the specified test(s) with pytest
+3. Automatically restores the original `__init__.py` on exit
+4. Allows testing converted files while keeping the original nose tests working
 
 ## Step 4: Testing the Migration
 
@@ -276,9 +346,11 @@ Once all tests have been migrated and verified:
 | `self.assertTrue(x)` | `assert x` |
 | `self.assertFalse(x)` | `assert not x` |
 | `self.assertRaises(ExcType, func, *args)` | `with pytest.raises(ExcType): func(*args)` |
-| `@nose.tools.raises(ExcType)` | `@pytest.mark.xfail(raises=ExcType)` |
+| `@nose.tools.raises(ExcType)` | `@pytest.mark.xfail(raises=ExcType)` or `with pytest.raises(ExcType):` |
 | `setUp()` | `@pytest.fixture(autouse=True)` |
 | `tearDown()` | Yield fixture teardown |
+| `@nottest` | `@pytest.mark.skip(reason="...")` |
+| `@expected_failure` | `@pytest.mark.xfail(reason="...")` |
 
 ## Examples from Our Migration
 
@@ -366,4 +438,22 @@ Migrating from nose to pytest is a methodical process that can be done increment
 
 ---
 
-*This guide is a work in progress and will be updated as we learn more during our migration process.*
+## Tips for Handling Specific Issues
+
+### Test Isolation
+
+When converting tests, pay special attention to test isolation, especially for:
+
+1. **Stateful operations**: Tests that modify global state might interfere with each other
+2. **Filesystem operations**: Tests creating or deleting files should use temporary directories
+3. **Test order dependencies**: Some tests may fail when run in a different order
+
+### Handling Permission Issues with Example Files
+
+Tests that execute example files as subprocesses may encounter permission issues:
+
+1. Make example files executable: `chmod +x path/to/example.py`
+2. Skip tests with permission problems during migration: `@pytest.mark.skip(reason="Permission issues")`
+3. Consider modifying the test to use internal APIs instead of subprocess calls for greater test reliability
+
+This guide represents lessons learned from our experience migrating a complex codebase from nose to pytest. It should help other teams make a similar transition smoothly.
