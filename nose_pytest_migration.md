@@ -279,9 +279,10 @@ python_functions = test_*
 The migration should be done methodically:
 
 1. **Create the pytest infrastructure files**:
-   - `pytest_base.py`
-   - `conftest.py`
-   - `pytest.ini`
+   - `pytest_base.py` - Base class for tests
+   - `conftest.py` - Shared fixtures and test configuration
+   - `pytest.ini` - pytest configuration
+   - `run_pytest_test.py` - Test runner for running converted tests
 
 2. **Migrate tests in batches**:
    - Start with simpler tests
@@ -296,11 +297,22 @@ The migration should be done methodically:
    - Replace `self.assertTrue(x)` with `assert x`
    - Replace `self.assertRaises` with `pytest.raises`
    - Replace `mySetUp` with setup in pytest fixtures
+   - Replace `@expected_failure` with `@pytest.mark.xfail`
+   - Replace `@nottest` with `@pytest.mark.skip`
 
-4. **Test progressively**:
-   - After converting each batch, run pytest to ensure they work
-   - Start with running individual test files, then run groups
-   - Resolve any issues before proceeding to more tests
+4. **Test isolation considerations**:
+   - Implement improved test isolation (see our `improved_pytest_base.py`)
+   - Use pytest's `tmp_path` fixture for file operations
+   - Avoid mutable class variables for test state
+   - Create unique contexts for different test phases
+   - Replace lambda functions with named functions in dynamic contexts
+   - Preserve and restore configuration state between tests
+
+5. **Test progressively**:
+   - Run individual tests first to verify basic conversion
+   - Run related test groups to check for isolation issues
+   - Resolve isolation issues before running the full suite
+   - Use the test runner script for consistent test environment
 
 ### 4. Benefits of this Approach
 
@@ -386,10 +398,14 @@ python -m pytest
 
 ### 7. Issues and Solutions
 
-This section will be updated as we encounter issues during the migration.
+This section documents the issues we encountered during the migration and how we resolved them.
 
 | Issue | Solution |
 |-------|----------|
 | `AttributeError: module 'time' has no attribute 'clock'` | `time.clock()` was removed in Python 3.8. Fixed by creating a compatibility layer in `utils/compat.py` with a `get_cpu_time()` function that uses `time.perf_counter()` in Python 3 and falls back to `time.clock()` in Python 2. Updated all calls in `structures.py` and `time_track.py`. |
 | nose imports causing test failures | Created a clean `__init__.py.pytest` without nose imports that can be swapped in for pytest. Added a `run_pytest_test.py` script to run tests in a controlled environment with the clean __init__. |
 | Multiprocessing issues with `parmake` in Python 3.12 | Tests using parallel execution via `parmake` fail with `KeyError` in the multiprocessing module. Temporarily switched to use sequential `make` instead in affected tests. This should be investigated further for a permanent fix to the multiprocessing code. |
+| Test isolation issues when running multiple tests | Created an improved test base class (`improved_pytest_base.py`) with better isolation techniques including unique temporary directories, configuration state preservation, and better teardown. See `pytest_isolation_fixes.md` for detailed solutions. |
+| Lambda functions in dynamic contexts causing pickle errors | Replaced lambda functions with named functions to avoid pickle errors. Used a pattern where test state is accessed through a class reference instead of closures. |
+| Shared class variables causing test interference | Moved from class variables to instance variables with proper initialization for each test. Created patterns for controlled and intentional state sharing where needed. |
+| Test cache issues between sequential test phases | Used completely fresh database contexts with unique directories for different phases of tests. Added explicit cleanup commands to prevent cache-related failures. |

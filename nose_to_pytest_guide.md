@@ -438,17 +438,141 @@ Migrating from nose to pytest is a methodical process that can be done increment
 
 ---
 
-## Tips for Handling Specific Issues
+## Comprehensive Guide to Test Isolation
 
-### Test Isolation
+Based on our migration experience, test isolation is one of the most challenging aspects of migrating from nose to pytest. Here's a comprehensive approach to handling isolation issues:
 
-When converting tests, pay special attention to test isolation, especially for:
+### 1. Creating an Improved Base Test Class
 
-1. **Stateful operations**: Tests that modify global state might interfere with each other
-2. **Filesystem operations**: Tests creating or deleting files should use temporary directories
-3. **Test order dependencies**: Some tests may fail when run in a different order
+For complex test suites, create an enhanced base class with better isolation features:
 
-### Handling Permission Issues with Example Files
+```python
+class ImprovedTestBase:
+    """Base class with better test isolation."""
+    
+    @pytest.fixture(autouse=True)
+    def setup_teardown(self, tmp_path):
+        """Setup and teardown with better isolation."""
+        # Use pytest's tmp_path fixture for unique test directories
+        self.test_dir = os.path.join(str(tmp_path), f"test_{uuid.uuid4().hex[:8]}")
+        os.makedirs(self.test_dir, exist_ok=True)
+        
+        # Save original configuration state
+        self.original_configs = {}
+        for config_name in ['important_setting', 'another_setting']:
+            self.original_configs[config_name] = get_config(config_name)
+        
+        # Setup your test environment
+        self.initialize_test_environment()
+        
+        yield  # Test runs here
+        
+        # Restore original configurations
+        for name, value in self.original_configs.items():
+            set_config(name, value)
+            
+        # Clean up any resources
+        self.cleanup_resources()
+```
+
+### 2. State Sharing Patterns
+
+When tests or test phases must share state, use these patterns:
+
+#### Pattern 1: Explicit State Transfer
+```python
+def test_phase1(self):
+    # Run first phase
+    result = run_operation()
+    # Store result for next test
+    self.store_result('key1', result)
+
+def test_phase2(self):
+    # Get result from previous phase
+    result = self.get_stored_result('key1')
+    # Continue testing
+```
+
+#### Pattern 2: Controlled Global State
+```python
+class TestClass:
+    # Class variable to track current test instance
+    current_instance = None
+    
+    def setup_method(self):
+        # Set current instance to this test
+        TestClass.current_instance = self
+        # Initialize test-specific state
+        self.my_state = {}
+    
+    # Other functions can access state through class reference
+    # This avoids issues with closures and lambda functions
+```
+
+### 3. Handling Database and File System State
+
+For tests involving databases and file operations:
+
+1. **Use unique directories for each test**:
+   ```python
+   def test_function(self, tmp_path):
+       test_dir = os.path.join(str(tmp_path), f"test_{uuid.uuid4().hex[:8]}")
+       # Use this directory for all file operations
+   ```
+
+2. **Create fresh contexts for different test phases**:
+   ```python
+   # For phase 1
+   context1 = create_context(directory1)
+   run_tests(context1)
+   
+   # For phase 2 - completely new context
+   context2 = create_context(directory2)
+   run_tests(context2)
+   ```
+
+3. **Flush caches between test phases**:
+   ```python
+   # Clear any cached state
+   context.execute_command('clean_cache')
+   # Now run the test
+   run_test(context)
+   ```
+
+### 4. Dealing with Pickling and Serialization
+
+1. **Avoid lambda functions in serialized contexts**:
+   ```python
+   # BAD - will cause pickle errors
+   context.execute_dynamic(lambda x: some_function(x, parameter))
+   
+   # GOOD - use named functions
+   def wrapper_function(x):
+       # Get parameters from a safe place
+       return some_function(x, get_parameter())
+   
+   context.execute_dynamic(wrapper_function)
+   ```
+
+2. **Be careful with closures**:
+   ```python
+   # BAD - closure references local variable
+   def outer_function(parameter):
+       def inner_function():
+           return parameter  # This causes pickle issues
+       return inner_function
+   
+   # GOOD - use class state instead
+   class TestClass:
+       @classmethod
+       def set_parameter(cls, value):
+           cls.parameter = value
+           
+       def inner_function(self):
+           return self.__class__.parameter
+   ```
+
+### 5. Handling Permission Issues with Example Files
 
 Tests that execute example files as subprocesses may encounter permission issues:
 
@@ -456,4 +580,13 @@ Tests that execute example files as subprocesses may encounter permission issues
 2. Skip tests with permission problems during migration: `@pytest.mark.skip(reason="Permission issues")`
 3. Consider modifying the test to use internal APIs instead of subprocess calls for greater test reliability
 
-This guide represents lessons learned from our experience migrating a complex codebase from nose to pytest. It should help other teams make a similar transition smoothly.
+### 6. Debugging Isolation Issues
+
+When you encounter test isolation problems:
+
+1. **Run tests individually**: Verify they pass in isolation
+2. **Run with high verbosity**: `pytest -vv` to see detailed output
+3. **Use print debugging**: Add print statements to track state changes
+4. **Create test order-aware fixtures**: If needed, use fixtures that know about test order
+
+This guide represents lessons learned from our experience migrating a complex codebase from nose to pytest. These patterns have helped us successfully migrate tests while ensuring they work both individually and in sequence.
