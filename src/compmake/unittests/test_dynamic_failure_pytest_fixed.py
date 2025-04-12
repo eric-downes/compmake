@@ -66,13 +66,19 @@ class TestDynamicFailure(CompmakeTestBase):
         self.assertJobsEqual('done', ['fd_wrapper', 'fd_wrapper-h', 'fd_wrapper-h-h2',
                                      'fd_wrapper-g', 'fd_wrapper-g-g2'])
 
-        # Create a new context to avoid test interference
-        self.db = StorageFilesystem(self.root, compress=True)
+        # Create a completely separate context with a fresh root directory
+        import tempfile
+        # Create a brand new temp directory to avoid any cached state
+        new_root = tempfile.mkdtemp()
+        self.db = StorageFilesystem(new_root, compress=True)
         self.cc = Context(db=self.db)
         
         # Now run with failure
         self.current_exception = ValueError
         mockup8(self.cc)
+        
+        # Clear cache to ensure job is rerun
+        self.assert_cmd_success('clean')
         self.assert_cmd_fail('make recurse=1')
         self.assertJobsEqual('all', ['fd_wrapper'])
 
