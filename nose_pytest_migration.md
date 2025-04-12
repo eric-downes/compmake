@@ -302,11 +302,55 @@ The migration should be done methodically:
 
 ### 5. Migration Progress Tracking
 
-| Test File | Status | Notes |
-|-----------|--------|-------|
-| test_blocked.py | Pending | Example conversion shown above |
-| test_dynamic_1.py | Pending | |
-| ... | Pending | |
+This table tracks the status of each test file's migration from nose to pytest:
+
+| Test File | Converted | Pytest File | Working | Notes |
+|-----------|-----------|-------------|---------|-------|
+| test_assertions.py | 🔄 Not Started | - | - | - |
+| test_blocked.py | ✅ Done | test_blocked_pytest.py | ⚠️ Untested | Example conversion |
+| test_delegation.py | 🔄 Not Started | - | - | - |
+| test_delegation_2.py | 🔄 Not Started | - | - | - |
+| test_delegation_3.py | 🔄 Not Started | - | - | - |
+| test_delegation_4.py | 🔄 Not Started | - | - | - |
+| test_delegation_5.py | 🔄 Not Started | - | - | - |
+| test_dynamic_1.py | 🔄 Not Started | - | - | - |
+| test_dynamic_2.py | 🔄 Not Started | - | - | - |
+| test_dynamic_2rec.py | 🔄 Not Started | - | - | - |
+| test_dynamic_2rec_par.py | 🔄 Not Started | - | - | - |
+| test_dynamic_3.py | 🔄 Not Started | - | - | - |
+| test_dynamic_4.py | 🔄 Not Started | - | - | - |
+| test_dynamic_5.py | 🔄 Not Started | - | - | - |
+| test_dynamic_6.py | 🔄 Not Started | - | - | - |
+| test_dynamic_7.py | 🔄 Not Started | - | - | - |
+| test_dynamic_8.py | 🔄 Not Started | - | - | - |
+| test_dynamic_9.py | 🔄 Not Started | - | - | - |
+| test_dynamic_9_redefinition.py | 🔄 Not Started | - | - | - |
+| test_dynamic_failure.py | 🔄 Not Started | - | - | - |
+| test_dynamic_new_process.py | 🔄 Not Started | - | - | - |
+| test_dynamic_re.py | 🔄 Not Started | - | - | - |
+| test_examples.py | 🔄 Not Started | - | - | - |
+| test_invalid_functions.py | 🔄 Not Started | - | - | - |
+| test_more.py | 🔄 Not Started | - | - | - |
+| test_old_jobs.py | 🔄 Not Started | - | - | - |
+| test_plugins.py | 🔄 Not Started | - | - | - |
+| test_priorities.py | 🔄 Not Started | - | - | - |
+| test_progress.py | 🔄 Not Started | - | - | - |
+| test_stats.py | 🔄 Not Started | - | - | - |
+| test_storage.py | 🔄 Not Started | - | - | - |
+| test_syntax.py | 🔄 Not Started | - | - | - |
+| test_unpickable_result.py | 🔄 Not Started | - | - | - |
+
+**Status Key:**
+- ✅ Done: Test has been converted to pytest
+- 🔄 Not Started: Conversion not yet begun
+- 🟠 In Progress: Conversion started but not complete
+- ❌ Failed: Conversion attempted but has issues
+
+**Working Key:**
+- ✅ Passing: Test runs and passes with pytest
+- ⚠️ Untested: Converted but not yet tested
+- ❌ Failing: Test converted but fails when run
+- 🐛 Issues: Test has specific issues that need addressing
 
 ### 6. Testing Commands
 
