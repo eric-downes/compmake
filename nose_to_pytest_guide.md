@@ -220,6 +220,14 @@ else:
 - **Issue**: Test discovery in `__init__.py` causes circular imports with nose
 - **Solution**: Create a clean `__init__.py` for pytest that doesn't import test modules
 
+#### Multiprocessing Issues in Python 3.12
+
+- **Issue**: Python 3.12 made changes to the multiprocessing module that can cause errors with existing code
+- **Solution**: 
+  - For test purposes, you may need to temporarily switch from parallel to sequential execution
+  - For permanent fixes, review the Python 3.12 multiprocessing module changes and update code accordingly
+  - Watch for KeyError exceptions in resource tracking or memory-shared dictionaries
+
 ### 3.2 Running Tests Standalone
 
 Create a way to run individual tests without depending on the test discovery system:
