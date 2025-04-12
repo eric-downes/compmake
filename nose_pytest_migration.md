@@ -324,10 +324,10 @@ This table tracks the status of each test file's migration from nose to pytest:
 | test_more.py | ✅ Done | test_more_pytest.py | ✅ Passing | Multiple tests for dependencies and job ID handling, converted assertions to pytest style |
 | test_delegation_2.py | ✅ Done | test_delegation_2_pytest.py | ✅ Passing | Test with recursive job delegation |
 | test_dynamic_2.py | ✅ Done | test_dynamic_2_pytest.py | ✅ Passing | Test with recursive mockup |
-| test_delegation_3.py | 🔄 Not Started | - | - | - |
-| test_delegation_4.py | 🔄 Not Started | - | - | - |
-| test_delegation_5.py | 🔄 Not Started | - | - | - |
-| test_dynamic_2rec.py | 🔄 Not Started | - | - | - |
+| test_delegation_3.py | ✅ Done | test_delegation_3_pytest.py | ✅ Passing | Similar to test_delegation_2 without named jobs |
+| test_delegation_4.py | ✅ Done | test_delegation_4_pytest.py | ✅ Passing | Another variant of job delegation |
+| test_delegation_5.py | ✅ Done | test_delegation_5_pytest.py | ✅ Passing | Tests with standalone class, doesn't use CompmakeTestBase |
+| test_dynamic_2rec.py | ✅ Done | test_dynamic_2rec_pytest.py | ✅ Passing | Test with recursive command |
 | test_dynamic_2rec_par.py | 🔄 Not Started | - | - | - |
 | test_dynamic_3.py | 🔄 Not Started | - | - | - |
 | test_dynamic_4.py | 🔄 Not Started | - | - | - |
