@@ -61,35 +61,87 @@ def restore_init_files():
         shutil.copy2(init_backup_path, init_path)
         print(f"Restored original __init__.py")
         os.remove(init_backup_path)
+        print(f"Removed backup file")
     else:
-        print(f"Warning: No backup found at {init_backup_path}, could not restore")
+        # This happens when the function is called twice (by sys.exit and by atexit)
+        # So we just silently ignore it
+        pass
 
 # Register cleanup function to always restore files
 atexit.register(restore_init_files)
 
 if __name__ == "__main__":
-    # Default test path
-    test_path = os.path.join('src', 'compmake', 'unittests', 'test_blocked_pytest.py')
-    
-    # Allow command-line override
+    # Default: run all pytest tests individually
     if len(sys.argv) > 1:
+        # Allow command-line override for specific test
         test_path = sys.argv[1]
-    
-    # Ensure test_path is a path relative to the root directory
-    if os.path.isabs(test_path):
-        test_path = os.path.relpath(test_path, root_dir)
-    
-    print(f"Running pytest on: {test_path}")
-    
-    # Swap init files before running tests
-    swap_init_files()
-    
-    try:
-        # Run the test(s)
-        result = pytest.main(["-v", test_path])
-        sys.exit(result)
-    except Exception as e:
-        print(f"Error running tests: {e}")
-        sys.exit(1)
-    finally:
-        # restore_init_files() will be called by atexit
+        
+        # Ensure test_path is a path relative to the root directory
+        if os.path.isabs(test_path):
+            test_path = os.path.relpath(test_path, root_dir)
+            
+        # Run the specific test
+        print(f"Running pytest on: {test_path}")
+        
+        # Swap init files before running tests
+        swap_init_files()
+        
+        try:
+            # Run the test
+            result = pytest.main(["-v", test_path])
+            sys.exit(result)
+        except Exception as e:
+            print(f"Error running tests: {e}")
+            sys.exit(1)
+        finally:
+            # This empty block is intentional
+            # restore_init_files() will be called by atexit
+            pass
+    else:
+        # Run all _pytest.py files in the unittests directory
+        import glob
+        
+        # Get all pytest test files
+        test_dir = os.path.join(src_dir, 'compmake', 'unittests')
+        test_files = glob.glob(os.path.join(test_dir, '*_pytest.py'))
+        
+        if not test_files:
+            print("No pytest files found in", test_dir)
+            sys.exit(1)
+        
+        # Sort the files to ensure consistent execution order
+        test_files.sort()
+        
+        print(f"Found {len(test_files)} pytest files to run")
+        
+        # Convert to paths relative to root directory
+        test_files = [os.path.relpath(f, root_dir) for f in test_files]
+        
+        # Swap init files before running tests
+        swap_init_files()
+        
+        try:
+            # Run the tests one by one
+            failed = []
+            for test_file in test_files:
+                print(f"\nRunning pytest on: {test_file}")
+                result = pytest.main(["-v", test_file])
+                if result != 0:
+                    failed.append(test_file)
+            
+            # Report results
+            if failed:
+                print(f"\nFAILED TESTS ({len(failed)}/{len(test_files)}):")
+                for test in failed:
+                    print(f"  - {test}")
+                sys.exit(1)
+            else:
+                print(f"\nAll {len(test_files)} tests passed!")
+                sys.exit(0)
+        except Exception as e:
+            print(f"Error running tests: {e}")
+            sys.exit(1)
+        finally:
+            # This empty block is intentional
+            # restore_init_files() will be called by atexit
+            pass

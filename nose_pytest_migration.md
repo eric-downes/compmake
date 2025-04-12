@@ -319,12 +319,12 @@ This table tracks the status of each test file's migration from nose to pytest:
 |-----------|-----------|-------------|---------|-------|
 | test_assertions.py | 🔄 Not Started | - | - | - |
 | test_blocked.py | ✅ Done | test_blocked_pytest.py | ✅ Passing | Fixed `time.clock()` issue with compatibility layer |
+| test_dynamic_1.py | ✅ Done | test_dynamic_1_pytest.py | ✅ Passing | A more complex test with dynamic job generation |
 | test_delegation.py | 🔄 Not Started | - | - | - |
 | test_delegation_2.py | 🔄 Not Started | - | - | - |
 | test_delegation_3.py | 🔄 Not Started | - | - | - |
 | test_delegation_4.py | 🔄 Not Started | - | - | - |
 | test_delegation_5.py | 🔄 Not Started | - | - | - |
-| test_dynamic_1.py | 🔄 Not Started | - | - | - |
 | test_dynamic_2.py | 🔄 Not Started | - | - | - |
 | test_dynamic_2rec.py | 🔄 Not Started | - | - | - |
 | test_dynamic_2rec_par.py | 🔄 Not Started | - | - | - |
