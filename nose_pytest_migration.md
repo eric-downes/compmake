@@ -10,6 +10,17 @@ ModuleNotFoundError: No module named 'imp'
 
 This is because nose depends on the deprecated `imp` module which was completely removed in Python 3.12.
 
+## Test Runner Approach
+
+To test our migrated tests without breaking compatibility with the existing nose tests, we've created `run_pytest_test.py`. This script provides a controlled environment for running pytest tests during the migration:
+
+```bash
+# Run a specific migrated test
+python run_pytest_test.py
+```
+
+This script swaps in a clean `__init__.py.pytest` that avoids nose dependencies and imports, allowing us to run migrated tests independently while preserving the existing test suite.
+
 ## Migration Plan
 
 This document outlines a comprehensive plan to migrate compmake's test suite from nose to pytest.
@@ -354,12 +365,20 @@ This table tracks the status of each test file's migration from nose to pytest:
 
 ### 6. Testing Commands
 
-Test individual file:
+**Recommended approach** using the test runner:
+```bash
+# Test a specific file (edit test path in script if needed)
+python run_pytest_test.py
+```
+
+Alternative approaches:
+
+Test individual file directly (may cause import issues):
 ```bash
 python -m pytest src/compmake/unittests/test_blocked.py -v
 ```
 
-Test all files:
+Test all converted files (after migration is complete):
 ```bash
 python -m pytest
 ```

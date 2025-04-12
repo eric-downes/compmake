@@ -4,6 +4,33 @@
 
 This guide documents the process of migrating a Python project's test suite from the now-unmaintained nose framework to pytest. As of Python 3.12, nose is no longer compatible due to its dependency on the removed `imp` module and other deprecated features. This guide captures lessons learned during the migration of compmake's test suite, but the principles can be applied to any project.
 
+## Quick Start: Running Tests During Migration
+
+To run tests during migration without breaking existing code, we recommend creating a dedicated test runner script (e.g., `run_pytest_test.py`):
+
+```python
+#!/usr/bin/env python
+import os
+import sys
+import pytest
+
+# Add source directory to path
+src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, src_dir)
+
+if __name__ == "__main__":
+    # Run a specific test file or directory
+    test_path = os.path.join('src', 'path', 'to', 'test_file.py')
+    result = pytest.main(["-v", test_path])
+    sys.exit(result)
+```
+
+This approach:
+1. Allows you to run converted tests independently of nose
+2. Avoids import conflicts between nose and pytest
+3. Provides a consistent test environment during migration
+4. Lets you verify each conversion without affecting other tests
+
 ## Why Migrate to pytest?
 
 - **Maintainability**: nose is no longer maintained, and pytest is the most actively maintained Python testing framework
